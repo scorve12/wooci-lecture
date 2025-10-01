@@ -1,255 +1,1124 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>구매대행 연 1억 매출 셀러의 판매전략 - WOOCI 매니저</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter & Noto Sans KR -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Heroicons for menu icon -->
-    <script src="https://unpkg.com/heroicons@2.1.3/24/outline/index.js"></script>
-    <style>
-        /* 기본 폰트 설정 */
-        body {
-            font-family: 'Inter', 'Noto Sans KR', sans-serif;
-        }
-        /* <details> 태그의 기본 화살표 아이콘 숨기기 */
-        details summary::-webkit-details-marker {
-            display: none;
-        }
-        details summary {
-            list-style: none;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WBS board</title>
+  <meta name="description" content="단일 HTML 파일로 동작하는 반응형 게시판 + 회원가입/로그인 + 관리자 승인 (localStorage 데모) + 이미지/마크다운" />
+  <style>
+    /* ===== Theme Vars ===== */
+    :root[data-theme="light"], :root:not([data-theme]){
+      --bg1:#f7f8fb; --bg2:#f4f6ff;
+      --panel1:#ffffff; --panel2:#fbfdff;
+      --muted:#6b7280; --text:#0f172a;
+      --brand:#2563eb; --brand2:#22c55e;
+      --danger:#ef4444; --ok:#16a34a;
+      --b:#e5e7eb; --b2:#d1d5db; --hover:#f1f5ff;
+      --radius:16px; --r-sm:10px; --r-lg:22px;
+      --ink:#334155; --surface:#f8fafc;
+    }
+    :root[data-theme="dark"]{
+      --bg1:#0b0c10; --bg2:#0e1017;
+      --panel1:#141726; --panel2:#10131f;
+      --muted:#9094a6; --text:#e5e7ef;
+      --brand:#6da8ff; --brand2:#95e0ff;
+      --danger:#ff5d5d; --ok:#67e37d;
+      --b:#1e2335; --b2:#262c46; --hover:#13172a;
+      --radius:16px; --r-sm:10px; --r-lg:22px;
+      --ink:#e5e7ef; --surface:#161a2a;
+    }
+
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,Inter,Roboto,Segoe UI,Arial; background:linear-gradient(180deg,var(--bg1),var(--bg2)); color:var(--text)}
+    a{color:inherit}
+    .container{max-width:1100px; margin:0 auto; padding:20px}
+    header{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:10px 0}
+    .title{display:flex; align-items:center; gap:10px}
+    .nav{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+
+    .panel{background:linear-gradient(180deg, var(--panel1), var(--panel2)); border:1px solid var(--b); border-radius:var(--radius); box-shadow:0 10px 30px rgba(2,6,23,.06)}
+    .toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:14px; border-bottom:1px solid var(--b)}
+    .btn{background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; border:0; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; position:relative; overflow:hidden; transition:transform .15s ease, box-shadow .2s ease; box-shadow:0 2px 10px rgba(37, 99, 235, .18)}
+    .btn.secondary{background:var(--surface); color:var(--ink); border:1px solid var(--b2); box-shadow:none}
+    .btn.danger{background:linear-gradient(135deg, #f87171, var(--danger)); color:#fff}
+    .btn.ok{background:linear-gradient(135deg, #34d399, var(--ok)); color:#fff}
+    .btn:active{transform:scale(.98)}
+    .muted{color:var(--muted)}
+
+    .row{display:flex; gap:12px; flex-wrap:wrap}
+    .search{display:flex; align-items:center; gap:10px; flex:1}
+    .search input{flex:1; min-width:180px; background:#fff; color:var(--ink); border:1px solid var(--b2); border-radius:10px; padding:10px 12px; outline:none}
+    .search input::placeholder{color:#94a3b8}
+    :root[data-theme="dark"] .search input{background:#0f1321; color:var(--text); border-color:#20263a}
+    :root[data-theme="dark"] .search input::placeholder{color:#7c86a2}
+
+    .table-wrap{overflow:auto}
+    table{width:100%; border-collapse:collapse}
+    th,td{padding:12px 10px; border-bottom:1px solid var(--b); font-size:14px; text-align:left}
+    th{color:var(--muted)}
+    tbody tr:hover{background:var(--hover)}
+    .empty{padding:40px; text-align:center; color:var(--muted)}
+
+    .pagination{display:flex; gap:10px; align-items:center; justify-content:flex-end; padding:14px; flex-wrap:wrap}
+    .page-btn{background:var(--surface); border:1px solid var(--b2); color:var(--ink); padding:10px 12px; border-radius:10px; cursor:pointer; position:relative; overflow:hidden; transition:transform .15s ease}
+    :root[data-theme="dark"] .page-btn{background:#14182a; color:var(--text); border-color: var(--b2)}
+    .page-btn.active{background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#ffffff; font-weight:700}
+
+    @media (max-width: 720px){
+      th{display:none}
+      table, tbody, tr, td{display:block; width:100%}
+      tr{border-bottom:1px solid var(--b)}
+      td{border:none; padding:10px 14px}
+      td[data-th]::before{content: attr(data-th) " · "; color:var(--muted); font-weight:600}
+      .pagination{justify-content:center}
+      .search{flex-direction:column; align-items:stretch}
+    }
+
+    dialog{border:0; padding:0; width:min(900px,94vw); background:linear-gradient(180deg,var(--panel1),var(--panel2)); color:var(--text); border-radius:var(--r-lg); box-shadow:0 30px 80px rgba(2,6,23,.18)}
+    dialog::backdrop{background:rgba(2,6,23,.35)}
+    .dialog-header{display:flex; justify-content:space-between; gap:8px; padding:16px; border-bottom:1px solid var(--b)}
+    .dialog-body{padding:16px}
+
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+    .field{display:flex; flex-direction:column; gap:6px}
+    label{font-size:12px; color:var(--muted)}
+    input[type="text"], input[type="email"], input[type="password"], textarea{background:#ffffff; border:1px solid var(--b2); color:var(--ink); padding:10px 12px; border-radius:10px; outline:none}
+    :root[data-theme="dark"] input[type="text"], :root[data-theme="dark"] input[type="email"], :root[data-theme="dark"] input[type="password"], :root[data-theme="dark"] textarea{background:#0f1321; border-color:#20263a; color:var(--text)}
+    textarea{min-height:240px; resize:vertical}
+
+    .chip{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:var(--surface); border:1px solid var(--b2); color:var(--muted); font-size:12px}
+    .chip .dot{width:8px; height:8px; border-radius:50%; background:var(--brand2)}
+
+    .title-wrap{display:flex; align-items:center; gap:8px}
+    .icon-btn{border:1px solid var(--b2); background:var(--surface); color:var(--ink); border-radius:8px; padding:4px 6px; font-size:12px; cursor:pointer; position:relative; overflow:hidden}
+    :root[data-theme="dark"] .icon-btn{background:#161a2a; color:var(--text)}
+
+    /* ===== Editor toolbar & preview ===== */
+    .md-toolbar{display:flex; gap:8px; align-items:center; justify-content:flex-end; margin:8px 0}
+    .content-body{line-height:1.7; font-size:16px}
+    .content-body h1{font-size:28px; margin:20px 0 10px}
+    .content-body h2{font-size:22px; margin:18px 0 8px}
+    .content-body h3{font-size:18px; margin:16px 0 8px}
+    .content-body p{margin:10px 0}
+    .content-body ul, .content-body ol{padding-left:22px; margin:8px 0}
+    .content-body li{margin:4px 0}
+    .content-body img{max-width:100%; height:auto; display:block; margin:10px auto; border-radius:10px; border:1px solid var(--b)}
+    .content-body code{background:var(--surface); border:1px solid var(--b2); padding:0 6px; border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .help{font-size:12px; color:var(--muted)}
+
+    /* ===== Animations & Motion ===== */
+    .ripple{position:absolute; left:0; top:0; border-radius:999px; pointer-events:none; width:12px; height:12px; transform:translate(-50%,-50%) scale(0); opacity:.35; background:currentColor; animation:ripple .6s ease-out forwards}
+    @keyframes ripple{to{transform:translate(-50%,-50%) scale(18); opacity:0}}
+    .reveal{opacity:0; transform:translateY(10px)}
+    .reveal.is-visible{opacity:1; transform:none; transition:opacity .45s ease, transform .45s ease}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important} }
+
+    /* Extra responsive tweaks */
+    @media (max-width:560px){
+      header{align-items:flex-start}
+      .nav{flex-wrap:wrap}
+      .nav > .btn, .nav > .btn.secondary, .nav > .btn.danger{flex:1 1 46%}
+      .toolbar{gap:12px}
+      .row{width:100%; justify-content:space-between}
+      #btnNewPost{width:100%}
+    }
+  /* Icon-only buttons */
+    .btn.icon-only, .icon-btn.icon-only, .page-btn.icon-only{width:36px; height:36px; padding:0; display:inline-flex; align-items:center; justify-content:center}
+    .nav .btn.icon-only{margin-left:2px; margin-right:2px}
+    .btn.icon-only svg, .icon-btn.icon-only svg{width:20px; height:20px; display:block}
+    /* Admin tools layout inside dialog */
+    .dialog-body .admin-toolbar{display:flex; gap:10px; align-items:center; justify-content:flex-end; padding:12px; margin:-16px -16px 12px; border-bottom:1px solid var(--b); background:linear-gradient(180deg, var(--panel1), var(--panel2)); border-top-left-radius: var(--r-lg); border-top-right-radius: var(--r-lg);}
+    .dialog-body .admin-toolbar .btn{box-shadow:none}
+    @media (max-width:720px){
+      .dialog-body .admin-toolbar{flex-wrap:wrap; justify-content:space-between}
+      .dialog-body .admin-toolbar .btn{flex:1 1 32%}
+    }
+  </style>
 </head>
-<body class="bg-white text-gray-800">
-
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <!-- Logo -->
-                <div class="flex-shrink-0">
-                    <a href="#">
-                        <img class="h-10 w-auto" src="img/logoblack.png" alt="WOOCI Logo">
-                    </a>
-                </div>
-
-                <!-- Desktop Navigation -->
-                
-
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        <span class="sr-only">Open main menu</span>
-                        <!-- Hamburger Icon -->
-                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">
+        <span style="font-size:28px">📋</span>
+        <div>
+          <div style="font-size:20px; font-weight:700">WBS 수강생 게시판</div>
+          <div class="muted">수강생 정보공유 일지 게시판</div>
         </div>
-
-        <!-- Mobile Menu, show/hide based on menu state. -->
-        <div id="mobile-menu" class="md:hidden hidden">
-        </div>
+      </div>
+      <div class="nav">
+        <span id="welcome" class="muted"></span>
+        <span id="backupStatus" class="chip" title="자동 백업 현황" style="display:none"><span class="dot"></span><span id="backupText">백업 준비됨</span></span>
+        <button class="btn secondary icon-only" id="btnTheme" aria-label="테마" title="테마"></button>
+        <button class="btn secondary" id="btnLogin">로그인</button>
+        <button class="btn secondary" id="btnSignup">회원가입</button>
+        <button class="btn" id="btnAdmin" hidden>관리자</button>
+        <button class="btn danger" id="btnLogout" hidden>로그아웃</button>
+      </div>
     </header>
 
-    <!-- Main Content -->
-    <div class="container mx-auto mt-10 mb-20 px-4">
-        <div class="max-w-6xl mx-auto">
-            <main class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                
-                <!-- Left: Product Image -->
-                <section class="product-image">
-                    <div class="relative">
-                        <span class="absolute top-4 left-4 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full">세일!</span>
-                        <img src="img/main tema.png" alt="강의 썸네일" class="w-full h-auto object-cover rounded-lg shadow-md">
-                    </div>
-                </section>
-
-                <!-- Right: Product Details & Purchase Form -->
-                <section class="product-details">
-                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight leading-tight">연 1억 매출 상위 셀러의 판매공식,<br> 마진율 극대화시키는 모든 전략</h1>
-                    
-                    <div id="price-container" class="my-4">
-                        <p class="text-xl md:text-2xl font-semibold text-gray-500">
-                            지금 신청하세요
-                        </p>
-                    </div>
-
-                    <div class="border-t border-gray-200 my-6"></div>
-
-                    <!-- Options Form -->
-                    <form id="purchase-form">
-                        <div class="space-y-4">
-                            <div>
-                                <label for="course-option" class="block text-sm font-medium text-gray-700 mb-1">수강과정</label>
-                                <select id="course-option" name="course-option" class="block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                    <option value="">옵션을 선택하세요</option>
-                                    <option value="online">온라인 반</option>
-                                    <option value="offline">오프라인 밀착반</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="mt-8">
-                            <button type="submit" id="submit-button" disabled class="w-full bg-indigo-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
-                                바로신청
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- Product Meta -->
-                    <div class="mt-6 text-sm text-gray-500 space-y-2">
-                        <p><span class="font-medium text-gray-700">SKU:</span> N/A</p>
-                        <p><span class="font-medium text-gray-700">카테고리:</span> <a href="#" class="text-indigo-600 hover:underline">프리미엄 강의</a></p>
-                        <p><span class="font-medium text-gray-700">태그:</span> <a href="#" class="text-indigo-600 hover:underline">나우진-결제창-기본-로켓그로스</a></p>
-                    </div>
-                </section>
-            </main>
-
-            <!-- Product Description Section -->
-            <section class="mt-16 md:mt-24">
-                <div class="max-w-4xl mx-auto space-y-1">
-                    <img src="img/1.png" alt="상세 설명 이미지 1" class="w-full h-auto">
-                    <img src="img/2.png" alt="상세 설명 이미지 2" class="w-full h-auto">
-                    <img src="img/3.png" alt="상세 설명 이미지 3" class="w-full h-auto">
-                    <img src="img/4.png" alt="상세 설명 이미지 4" class="w-full h-auto">
-                    <img src="img/5.png" alt="상세 설명 이미지 5" class="w-full h-auto">
-                    <img src="img/6.png" alt="상세 설명 이미지 6" class="w-full h-auto">
-                    <img src="img/7.png" alt="상세 설명 이미지 7" class="w-full h-auto">
-                    <img src="img/8.png" alt="상세 설명 이미지 8" class="w-full h-auto">
-                    <img src="img/9.png" alt="상세 설명 이미지 9" class="w-full h-auto">
-                    <img src="img/10.png" alt="상세 설명 이미지 10" class="w-full h-auto">
-                </div>
-                
-                <!-- Course Regulations -->
-                <div class="max-w-4xl mx-auto mt-12">
-                    <details class="border rounded-lg overflow-hidden">
-                        <summary class="flex justify-between items-center p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium">
-                            <span>수강 규정</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 transition-transform duration-300 transform details-arrow">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        </summary>
-                        <div class="p-4 bg-white border-t text-sm text-gray-600 leading-relaxed">
-                            <p class="mb-2"><strong>강의 형태 및 수강 기간:</strong> 본 강의는 온라인, 오프라인 강의 형태로 진행됩니다.</p>
-                            <ul class="list-disc list-inside mb-4 space-y-1">
-                                <li><strong>온라인 반:</strong> 온라인 ZOOM 수업으로 오프라인과 동일하게 진행됩니다.</li>
-                                <li><strong>오프라인 밀착 케어반:</strong> 오프라인 수업으로 총 6회차(5회차 정규 강의 + 1회차 컨설팅 강의)로 운영됩니다.</li>
-                            </ul>
-                            <p class="mb-4">강의 시작 일자 및 상세 커리큘럼은 상단 이미지 내 확인이 가능합니다.<br>수강 신청 시, 하단 규정을 모두 확인 후 결제한 것으로 간주합니다.<br>수강 중도 신청 시, 지난 수강 일자에 대해서는 수강을 진행한 것으로 간주합니다.</p>
-                            <p class="mb-2"><strong>[수강 환불 및 수강 규정]</strong></p>
-                            <p class="mb-4">수강 비용은 1인 수업 참석에 해당하는 비용입니다. ... (이하 약관 내용)</p>
-                            <p class="mb-2"><strong>[특별 환불 규정]</strong></p>
-                            <p class="mb-4">오프라인 밀착 케어반의 경우 수강 기간 종료일로부터 3개월 이내로 170만 원 매출을 달성하지 못하는 경우... (이하 약관 내용)</p>
-                        </div>
-                    </details>
-                </div>
-            </section>
+    <section class="panel" aria-label="게시판">
+      <div class="toolbar">
+        <div class="search">
+          <input id="q" type="search" placeholder="제목·작성자·내용 검색" aria-label="검색" />
+          <button class="btn secondary" id="resetSearch">초기화</button>
         </div>
+        <div class="row">
+          <button class="btn" id="btnNewPost">+ 글 작성</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:80px">번호</th>
+              <th>제목</th>
+              <th style="width:160px">작성자</th>
+              <th style="width:200px">작성일</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="emptyPosts" class="empty" hidden>등록된 글이 없습니다.</div>
+      </div>
+      <div class="pagination" id="pager"></div>
+    </section>
+
+    <p class="muted" style="margin-top:14px">※ 본 데모는 <b>로컬 저장소(localStorage)</b>를 사용합니다. 실제 서비스용 보안 기능은 포함되어 있지 않습니다. 이미지가 많을 경우 브라우저 저장 용량을 초과할 수 있습니다.</p>
+  </div>
+
+  <!-- Post Dialog -->
+  <dialog id="dlgPost">
+    <div class="dialog-header">
+      <div class="chip"><span class="dot"></span><span id="dlgPostMode">새 글</span></div>
+      <button class="btn secondary" id="closePost">닫기</button>
     </div>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white">
-        <div class="container mx-auto py-12 px-4">
-            <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
-                <div class="mb-8 md:mb-0">
-                    <img class="h-10 w-auto mx-auto md:mx-0" src="img/logowhite.png" alt="Footer Logo">
-                    <div class="mt-6 flex justify-center md:justify-start space-x-6">
-                        <a href="#" class="text-sm text-gray-400 hover:text-white">서비스이용약관</a>
-                        <a href="#" class="text-sm text-gray-400 hover:text-white">개인정보처리방침</a>
-                    </div>
-                </div>
-                <div class="text-xs text-gray-400">
-                    <p>유통회사 WOOCI | 사업자등록번호 : 101-26-96570 | 대표자 : 나우진</p>
-                    <p>통신판매업번호 : 제2023-광주광산-0149호</p>
-                    <p>광주광역시 소촌로 86번길 17, 104동 203호 | 이메일 : nwj1224@naver.com</p>
-                    <p>Tel. 010-4378-1322 </p>
-                </div>
-            </div>
+    <div class="dialog-body">
+      <form id="postForm">
+        <input type="hidden" id="postId" />
+        <div class="grid" id="postMeta">
+          <div class="field"><label>제목</label><input id="postTitle" type="text" required /></div>
+          <div class="field"><label>작성자</label><input id="postAuthor" type="text" required readonly /></div>
         </div>
-    </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // --- Mobile Menu Toggle ---
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
+        <!-- Markdown toolbar -->
+        <div class="md-toolbar" id="editorToolbar">
+          <button type="button" class="btn secondary" id="btnTogglePreview">미리보기</button>
+          <button type="button" class="btn secondary" id="btnInsertImage">이미지 삽입</button>
+          <input type="file" id="imgFileInput" accept="image/*" hidden />
+        </div>
 
-            // --- Course Option & Price Logic ---
-            const courseOptionSelect = document.getElementById('course-option');
-            const priceContainer = document.getElementById('price-container');
-            const submitButton = document.getElementById('submit-button');
-            const purchaseForm = document.getElementById('purchase-form');
+        <div class="field" style="margin-top:8px" id="editorWrap">
+          <label>내용 (마크다운 지원 · 이미지 드래그&드롭/붙여넣기 가능)</label>
+          <textarea id="postContent" required placeholder="# 제목\n\n텍스트를 입력하고 이미지를 드래그·붙여넣기 하세요.\n\n![이미지 설명](data:img...)"></textarea>
+          <div class="help">예) <code># 기본적인 판매 수수료</code>, <code>## 배송비 수수료</code>, 리스트 <code>- 항목</code> / 이미지 <code>![설명](...)</code></div>
+        </div>
 
-            // 가격 정보 (원본 사이트 데이터 기반)
-            const prices = {
-                online: {
-                    regular: 2100000,
-                    sale: 1300000
-                },
-                offline: {
-                    regular: 2500000,
-                    sale: 1700000
-                }
+        <!-- Rendered preview -->
+        <div id="postPreviewWrap" class="field" style="display:none">
+          <label>미리보기</label>
+          <div id="postPreview" class="content-body"></div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end; margin-top:14px" id="postActions">
+          <button class="btn danger" type="button" id="btnDeletePost" hidden>삭제</button>
+          <button class="btn" type="submit">저장</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Login Dialog -->
+  <dialog id="dlgLogin">
+    <div class="dialog-header">
+      <div class="chip"><span class="dot"></span><span>로그인</span></div>
+      <button class="btn secondary" id="closeLogin">닫기</button>
+    </div>
+    <div class="dialog-body">
+      <form id="loginForm">
+        <div class="field"><label>이메일</label><input id="loginEmail" type="email" required /></div>
+        <div class="field"><label>비밀번호</label><input id="loginPw" type="password" required /></div>
+        <p class="muted" id="loginMsg"></p>
+        <div class="row" style="justify-content:flex-end; margin-top:12px">
+          <button class="btn" type="submit">로그인</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Signup Dialog -->
+  <dialog id="dlgSignup">
+    <div class="dialog-header">
+      <div class="chip"><span class="dot"></span><span>회원가입</span></div>
+      <button class="btn secondary" id="closeSignup">닫기</button>
+    </div>
+    <div class="dialog-body">
+      <form id="signupForm">
+        <div class="grid">
+          <div class="field"><label>이메일</label><input id="suEmail" type="email" required /></div>
+          <div class="field"><label>이름</label><input id="suName" type="text" required /></div>
+        </div>
+        <div class="grid">
+          <div class="field"><label>비밀번호 (8자 이상)</label><input id="suPw" type="password" minlength="8" required /></div>
+          <div class="field"><label>비밀번호 확인</label><input id="suPw2" type="password" minlength="8" required /></div>
+        </div>
+        <p class="muted">가입 후 <b>관리자 승인</b> 전에는 로그인할 수 없습니다.</p>
+        <p class="muted" id="signupMsg"></p>
+        <div class="row" style="justify-content:flex-end; margin-top:12px">
+          <button class="btn" type="submit">가입 신청</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Admin Dialog -->
+  <dialog id="dlgAdmin">
+    <div class="dialog-header">
+      <div class="chip"><span class="dot" style="background:var(--ok)"></span><span>관리자: 사용자 승인</span></div>
+      <button class="btn secondary" id="closeAdmin">닫기</button>
+    </div>
+    <div class="dialog-body">
+      <div class="toolbar admin-toolbar" id="adminTools">
+        <button class="btn secondary" id="btnBackupDownload" title="백업 다운로드" aria-label="백업 다운로드">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          <span class="btn-label" style="margin-left:6px">백업 다운로드</span>
+        </button>
+        <button class="btn secondary" id="btnBackupSavePicker" title="파일로 저장" aria-label="파일로 저장">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+          <span class="btn-label" style="margin-left:6px">파일로 저장</span>
+        </button>
+        <button class="btn secondary" id="btnBackupImport" title="가져오기" aria-label="가져오기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v12"/></svg>
+          <span class="btn-label" style="margin-left:6px">가져오기</span>
+        </button>
+        <button class="btn secondary" id="btnBackupLinkFolder" title="백업 폴더 연결" aria-label="백업 폴더 연결">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+            <path d="M3 7h5l2 2h11v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <path d="M3 7a2 2 0 0 1 2-2h4l2 2"/>
+          </svg>
+          <span class="btn-label" style="margin-left:6px">백업 폴더 연결</span>
+        </button>
+        <span id="linkedFolderStatus" class="muted" style="margin-left:6px; display:none;">폴더 연결됨</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>이메일</th><th>이름</th><th>상태</th><th>권한</th><th>가입일</th><th>액션</th></tr></thead>
+          <tbody id="tbodyUsers"></tbody>
+        </table>
+      </div>
+      <p class="muted">기본 관리자: <b>admin@example.com / admin1234</b> (코드에 시드됨)</p>
+    </div>
+  </dialog>
+
+  <script>
+  (function(){
+    'use strict';
+
+    /*** =====================================
+     *  Utilities & Constants
+     * ===================================== */
+    const KS = { users:'htmlonly-users-v1', posts:'htmlonly-posts-v1', session:'htmlonly-session-v1', theme:'htmlonly-theme', lastBackup:'htmlonly-last-backup' };
+    const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+    const nowStr = (t) => new Date(t).toLocaleString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const esc = (s='') => String(s).replace(/[&<>"']/g, ch => ch==='&'?'&amp;': ch==='<'?'&lt;': ch==='>'?'&gt;': ch==='"'?'&quot;':'&#39;');
+    const load = (k, def) => { try { const raw = localStorage.getItem(k); return raw==null ? def : JSON.parse(raw); } catch { return def; } };
+    const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn('localStorage save failed:', e); alert('저장 공간이 부족하거나 브라우저 정책으로 저장에 실패했습니다.'); throw e; } };
+
+    const AUTO_BACKUP_MS = 60*60*1000; // 60분
+    let _autoBackupTimer = null;
+    let _backupDirHandle = null;
+
+    /*** =====================================
+     *  IndexedDB (폴더 핸들 보존)
+     * ===================================== */
+    const FSDB = {
+      db: null,
+      init(){
+        return new Promise((resolve,reject)=>{
+          try{
+            const req = indexedDB.open('boardBackupDB', 1);
+            req.onupgradeneeded = ()=>{
+              const db = req.result;
+              if(!db.objectStoreNames.contains('fs-handles')){
+                db.createObjectStore('fs-handles', { keyPath: 'key' });
+              }
             };
-            
-            // 숫자 포맷팅 함수
-            const formatCurrency = (number) => `₩${number.toLocaleString('ko-KR')}`;
-            const formatMonthly = (number) => `월 ${Math.round(number / 12).toLocaleString('ko-KR')}원`;
-
-            courseOptionSelect.addEventListener('change', function() {
-                const selectedValue = this.value;
-                if (selectedValue && prices[selectedValue]) {
-                    const priceInfo = prices[selectedValue];
-                    
-                    priceContainer.innerHTML = `
-                        <p class="flex items-baseline gap-2">
-                            <span class="text-sm text-gray-500 line-through">${formatCurrency(priceInfo.regular)}</span>
-                            <span class="text-2xl md:text-3xl font-bold text-red-600">${formatCurrency(priceInfo.sale)}</span>
-                        </p>
-                        <p class="text-lg font-medium text-gray-800 mt-2">
-                            <span class="text-sm font-normal text-gray-500">(12개월 할부시)</span>
-                            ${formatMonthly(priceInfo.sale)}
-                        </p>
-                    `;
-                    submitButton.disabled = false;
-                } else {
-                    priceContainer.innerHTML = `<p class="text-xl md:text-2xl font-semibold text-gray-500">옵션을 선택해주세요</p>`;
-                    submitButton.disabled = true;
-                }
-            });
-
-            // --- Form submission redirection ---
-            purchaseForm.addEventListener('submit', function(event) {
-                event.preventDefault(); // 기본 폼 제출 동작 방지
-                // 옵션이 선택되었는지 확인 (버튼이 활성화 상태인지 체크)
-                if (!submitButton.disabled) {
-                    window.location.href = 'http://pf.kakao.com/_cbTjn/friend'; 
-                }
-            });
-
-            // --- Details/Summary Arrow Rotation ---
-            const detailsElement = document.querySelector('details');
-            if (detailsElement) {
-                const arrow = detailsElement.querySelector('.details-arrow');
-                detailsElement.addEventListener('toggle', () => {
-                    arrow.classList.toggle('rotate-180');
-                });
-            }
+            req.onsuccess = ()=>{ FSDB.db = req.result; resolve(FSDB.db); };
+            req.onerror = ()=> reject(req.error);
+          }catch(e){ reject(e); }
         });
-    </script>
+      },
+      async setDirHandle(handle){
+        if(!window.indexedDB) throw new Error('IndexedDB not supported');
+        if(!this.db) await this.init();
+        return new Promise((resolve,reject)=>{
+          try{
+            const tx = this.db.transaction('fs-handles','readwrite');
+            tx.objectStore('fs-handles').put({ key:'backup-dir', handle });
+            tx.oncomplete = ()=> resolve(true);
+            tx.onerror = ()=> reject(tx.error);
+          }catch(e){ reject(e); }
+        });
+      },
+      async getDirHandle(){
+        if(!window.indexedDB) return null;
+        if(!this.db) await this.init();
+        return new Promise((resolve,reject)=>{
+          try{
+            const tx = this.db.transaction('fs-handles','readonly');
+            const req = tx.objectStore('fs-handles').get('backup-dir');
+            req.onsuccess = ()=> resolve(req.result ? req.result.handle : null);
+            req.onerror = ()=> reject(req.error);
+          }catch(e){ resolve(null); }
+        });
+      }
+    };
+
+    /*** =====================================
+     *  OPFS Helpers
+     * ===================================== */
+    async function opfsWrite(path, dataBlob){
+      if(!(navigator.storage && navigator.storage.getDirectory)) throw new Error('OPFS not supported');
+      const root = await navigator.storage.getDirectory();
+      const parts = path.split('/');
+      let dir = root;
+      for(let i=0;i<parts.length-1;i++) dir = await dir.getDirectoryHandle(parts[i], {create:true});
+      const fileHandle = await dir.getFileHandle(parts[parts.length-1], {create:true});
+      const w = await fileHandle.createWritable();
+      await w.write(dataBlob);
+      await w.close();
+      return true;
+    }
+    function fmtAgo(ts){ if(!ts) return '백업 기록 없음'; const d = Date.now()-ts; const m=Math.floor(d/60000); if(m<1) return '방금'; if(m<60) return m+'분 전'; const h=Math.floor(m/60); if(h<24) return h+'시간 전'; const day=Math.floor(h/24); return day+'일 전'; }
+
+    /*** =====================================
+     *  Icons
+     * ===================================== */
+    function svg(name){ const c='currentColor'; switch(name){
+      case 'sun': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`;
+      case 'moon': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+      case 'plus': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`;
+      case 'eraser': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14l-7-7-8 8 4 4h7l4-5z"/></svg>`;
+      case 'logout': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>`;
+      case 'shield': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+      case 'close': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+      case 'trash': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+      case 'save': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>`;
+      case 'check': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+      case 'x': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+      case 'edit': return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>`;
+      default: return '';
+    }}
+
+    /*** =====================================
+     *  Markdown renderer (safe subset)
+     * ===================================== */
+    function renderMarkdown(mdRaw=''){
+      // Escape HTML first
+      let md = String(mdRaw).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;');
+
+      // Code span `code`
+      md = md.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+      // Images ![alt](src)
+      md = md.replace(/!\[([^\]]*)\]\(([^\)]+)\)/g, (m, alt, src) => {
+        const a = esc(alt);
+        const s = src.trim();
+        // Only allow data: or http(s): images
+        if(!/^data:image\/(png|jpe?g|gif|webp);base64,/i.test(s) && !/^https?:\/\//i.test(s)) return m; // keep raw if not allowed
+        return `<img alt=\"${a}\" src=\"${s}\" referrerpolicy=\"no-referrer\" loading=\"lazy\">`; 
+      });
+
+      // Bold **text** and italic *text*
+      md = md.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      md = md.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+
+      // Headings ###### .. #
+      for(let n=6;n>=1;n--){
+        const re = new RegExp(`^${'#'.repeat(n)}\\s+(.+)$`, 'gm');
+        md = md.replace(re, `<h${n}>$1</h${n}>`);
+      }
+
+      // Lists (ordered and unordered) - group consecutive lines
+      md = md.replace(/(^|\n)(?:-\s+.+(?:\n-\s+.+)*)/g, block => {
+        const items = block.trim().split(/\n/).map(l=> l.replace(/^[-]\s+/, '').trim()).filter(Boolean);
+        if(items.length<1) return block;
+        return '\n<ul>' + items.map(it=> `<li>${it}</li>`).join('') + '</ul>';
+      });
+      md = md.replace(/(^|\n)(?:\d+\.\s+.+(?:\n\d+\.\s+.+)*)/g, block => {
+        const items = block.trim().split(/\n/).map(l=> l.replace(/^\d+\.\s+/, '').trim()).filter(Boolean);
+        if(items.length<1) return block;
+        return '\n<ol>' + items.map(it=> `<li>${it}</li>`).join('') + '</ol>';
+      });
+
+      // Paragraphs: split by double newlines
+      const parts = md.split(/\n{2,}/).map(seg=> seg.trim()).filter(Boolean);
+      const html = parts.map(seg => /^(<h\d|<ul>|<ol>|<img|<blockquote|<pre|<p|<table|<code)/.test(seg) ? seg : `<p>${seg.replace(/\n/g,'<br>')}</p>`).join('\n');
+      return html;
+    }
+
+    /*** =====================================
+     *  Image helpers: paste/drag-drop/upload + resize to 1280px
+     * ===================================== */
+    function insertAtCursor(textarea, text){
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      const before = textarea.value.slice(0, start);
+      const after = textarea.value.slice(end);
+      textarea.value = before + text + after;
+      const pos = start + text.length;
+      textarea.selectionStart = textarea.selectionEnd = pos;
+      textarea.dispatchEvent(new Event('input', {bubbles:true}));
+      textarea.focus();
+    }
+
+    function readFileAsImageBitmap(file){
+      return new Promise((resolve,reject)=>{
+        // Prefer createImageBitmap when available
+        if(typeof createImageBitmap === 'function'){
+          const fr = new FileReader();
+          fr.onload = ()=>{
+            createImageBitmap(new Blob([fr.result]))
+              .then(resolve)
+              .catch(reject);
+          };
+          fr.onerror = ()=> reject(fr.error);
+          fr.readAsArrayBuffer(file);
+        } else {
+          // Fallback: use Image element + DataURL
+          const fr = new FileReader();
+          fr.onload = ()=>{
+            const img = new Image();
+            img.onload = ()=> resolve(img);
+            img.onerror = ()=> reject(new Error('이미지 로드 실패'));
+            img.src = fr.result;
+          };
+          fr.onerror = ()=> reject(fr.error);
+          fr.readAsDataURL(file);
+        }
+      });
+    }
+
+    async function resizeToDataURL(file, maxW=1280){
+      try{
+        const ib = await readFileAsImageBitmap(file);
+        const w0 = ib.width || 1, h0 = ib.height || 1;
+        const ratio = Math.min(1, maxW / w0);
+        const w = Math.max(1, Math.round(w0 * ratio));
+        const h = Math.max(1, Math.round(h0 * ratio));
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(ib, 0, 0, w, h);
+        const mime = (/png/i.test(file.type) ? 'image/png' : 'image/jpeg');
+        return canvas.toDataURL(mime, 0.9);
+      }catch(e){
+        console.warn('resize failed, fallback to readAsDataURL', e);
+        return await new Promise((resolve,reject)=>{
+          const fr = new FileReader();
+          fr.onload = ()=> resolve(fr.result);
+          fr.onerror = ()=> reject(fr.error);
+          fr.readAsDataURL(file);
+        });
+      }
+    }
+
+    async function handleFilesToMarkdown(files, textarea){
+      for(const f of files){
+        if(!/^image\//i.test(f.type)) continue;
+        const dataURL = await resizeToDataURL(f, 1280);
+        insertAtCursor(textarea, `\n\n![이미지](${dataURL})\n\n`);
+      }
+    }
+
+    /*** =====================================
+     *  DOM
+     * ===================================== */
+    const $ = (id)=> document.getElementById(id);
+    const $welcome = $('welcome');
+    const $btnLogin = $('btnLogin');
+    const $btnSignup = $('btnSignup');
+    const $btnLogout = $('btnLogout');
+    const $btnAdmin = $('btnAdmin');
+    const $btnTheme = $('btnTheme');
+    const $q = $('q');
+    const $resetSearch = $('resetSearch');
+    const $btnNewPost = $('btnNewPost');
+    const $tbody = $('tbody');
+    const $emptyPosts = $('emptyPosts');
+    const $pager = $('pager');
+
+    const $dlgPost = $('dlgPost');
+    const $dlgPostMode = $('dlgPostMode');
+    const $closePost = $('closePost');
+    const $postForm = $('postForm');
+    const $postId = $('postId');
+    const $postTitle = $('postTitle');
+    const $postAuthor = $('postAuthor');
+    const $postContent = $('postContent');
+    const $btnDeletePost = $('btnDeletePost');
+    const $btnTogglePreview = $('btnTogglePreview');
+    const $btnInsertImage = $('btnInsertImage');
+    const $imgFileInput = $('imgFileInput');
+    const $postPreviewWrap = $('postPreviewWrap');
+    const $postPreview = $('postPreview');
+    const $postMeta = $('postMeta');
+    const $editorWrap = $('editorWrap');
+    const $postActions = $('postActions');
+
+    const $dlgLogin = $('dlgLogin');
+    const $closeLogin = $('closeLogin');
+    const $loginForm = $('loginForm');
+    const $loginEmail = $('loginEmail');
+    const $loginPw = $('loginPw');
+    const $loginMsg = $('loginMsg');
+
+    const $dlgSignup = $('dlgSignup');
+    const $closeSignup = $('closeSignup');
+    const $signupForm = $('signupForm');
+    const $suEmail = $('suEmail');
+    const $suName = $('suName');
+    const $suPw = $('suPw');
+    const $suPw2 = $('suPw2');
+    const $signupMsg = $('signupMsg');
+
+    const $dlgAdmin = $('dlgAdmin');
+    const $closeAdmin = $('closeAdmin');
+    const $tbodyUsers = $('tbodyUsers');
+
+    // admin backup buttons (lazy refs)
+    const $btnBackupDownload = () => $('btnBackupDownload');
+    const $btnBackupSavePicker = () => $('btnBackupSavePicker');
+    const $btnBackupImport = () => $('btnBackupImport');
+    const $btnBackupLinkFolder = () => $('btnBackupLinkFolder');
+
+    /*** =====================================
+     *  Seed
+     * ===================================== */
+    (function seed(){
+      let users = load(KS.users, []);
+      let posts = load(KS.posts, []);
+      let admin = users.find(u=>u.email==='admin@example.com');
+      if(!admin){
+        admin = { id:uuid(), email:'admin@example.com', name:'관리자', password:'admin1234', role:'ADMIN', status:'APPROVED', createdAt:Date.now() };
+        users.push(admin); save(KS.users, users);
+      }
+      if(posts.length===0){
+        const sample = `# 환영합니다 👋\n\n이 데모는 단일 HTML 파일입니다.\n\n이미지를 이렇게 넣을 수 있어요:\n\n![샘플](https://picsum.photos/seed/wbs/800/400)`;
+        posts.push({ id:uuid(), title:'환영합니다 👋', author:admin.name, ownerId:admin.id, content:sample, createdAt:Date.now() });
+        save(KS.posts, posts);
+      } else {
+        let changed=false; for(const p of posts){ if(!('ownerId' in p)){ p.ownerId=admin.id; changed=true; } } if(changed) save(KS.posts, posts);
+      }
+    })();
+
+    /*** =====================================
+     *  Session / Auth helpers
+     * ===================================== */
+    const getSession = ()=> load(KS.session, null);
+    const setSession = (userId)=> save(KS.session, userId? {userId}: null);
+    const currentUser = ()=>{ const s=getSession(); if(!s) return null; return load(KS.users, []).find(u=>u.id===s.userId)||null; };
+
+    /*** =====================================
+     *  Theme
+     * ===================================== */
+    function applyTheme(theme){
+      const t=(theme==='dark'||theme==='light')? theme : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      if($btnTheme){
+        $btnTheme.setAttribute('aria-label', t==='dark'?'라이트모드':'다크모드');
+        $btnTheme.title = t==='dark'?'라이트모드':'다크모드';
+        $btnTheme.innerHTML = t==='dark'? svg('sun') : svg('moon');
+      }
+      save(KS.theme, t);
+    }
+    function initTheme(){
+      let saved=load(KS.theme,null);
+      if(saved!=='light' && saved!=='dark'){
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        saved = prefersDark? 'dark':'light';
+      }
+      applyTheme(saved);
+      if($btnTheme){ $btnTheme.addEventListener('click', ()=>{
+        const cur=document.documentElement.getAttribute('data-theme')||'light';
+        applyTheme(cur==='light'?'dark':'light');
+      }); }
+    }
+
+    /*** =====================================
+     *  Board state & render
+     * ===================================== */
+    const state = { q:'', page:1, size:10, total:0 };
+
+    function renderNavbar(){
+      const me=currentUser();
+      if(me){
+        $welcome.textContent = `${me.name} (${me.status}${me.role==='ADMIN'?', ADMIN':''})`;
+        $btnLogin.hidden=true; $btnSignup.hidden=true; $btnLogout.hidden=false; $btnAdmin.hidden = me.role!=='ADMIN';
+      } else {
+        $welcome.textContent='';
+        $btnLogin.hidden=false; $btnSignup.hidden=false; $btnLogout.hidden=true; $btnAdmin.hidden=true;
+      }
+    }
+
+    function filteredPosts(){
+      const posts = load(KS.posts, []).sort((a,b)=> b.createdAt - a.createdAt);
+      const q = state.q.trim().toLowerCase();
+      if(!q) return posts;
+      return posts.filter(p=> [p.title,p.author,p.content].some(v=> (v||'').toLowerCase().includes(q)) );
+    }
+
+    function renderPosts(){
+      const list = filteredPosts();
+      state.total = list.length;
+      const start = (state.page-1)*state.size;
+      const pageRows = list.slice(start, start+state.size);
+
+      $tbody.innerHTML='';
+      if(pageRows.length===0){ $emptyPosts.hidden=false; $pager.innerHTML=''; return; }
+      $emptyPosts.hidden=true;
+
+      pageRows.forEach((p,idx)=>{
+        const tr=document.createElement('tr');
+        tr.classList.add('reveal');
+        tr.innerHTML = '<td data-th="번호">'+(start+idx+1)+'</td>'+
+                       '<td data-th="제목" class="title-cell"><span class="title-wrap"><a href="#" data-id="'+p.id+'">'+esc(p.title)+'</a> <button class="icon-btn icon-only" data-edit-id="'+p.id+'" title="편집" hidden>'+svg('edit')+'</button></span></td>'+
+                       '<td data-th="작성자">'+esc(p.author)+'</td>'+
+                       '<td data-th="작성일" class="muted">'+nowStr(p.createdAt)+'</td>';
+        const link = tr.querySelector('a');
+        const editBtn = tr.querySelector('.icon-btn');
+        const me = currentUser();
+        const canEdit = !!(me && (me.role==='ADMIN' || p.ownerId===me.id));
+        if(canEdit){ editBtn.hidden=false; editBtn.addEventListener('click', (e)=>{ e.preventDefault(); openPost('edit', p.id); }); }
+        link.addEventListener('click', (e)=>{ e.preventDefault(); openPost('view', p.id); });
+        $tbody.appendChild(tr);
+        requestAnimationFrame(()=> setTimeout(()=> tr.classList.add('is-visible'), idx*35));
+      });
+      renderPager();
+      bindRipples();
+    }
+
+    function renderPager(){
+      const pages = Math.max(1, Math.ceil(state.total/state.size));
+      if(state.page>pages) state.page=pages;
+      const btn=(label,p,active=false,disabled=false)=> '<button class="page-btn '+(active?'active':'')+'" '+(disabled?'disabled':'')+' data-page="'+p+'">'+label+'</button>';
+      const items=[];
+      items.push(btn('«',1,false,state.page===1));
+      items.push(btn('‹',Math.max(1,state.page-1),false,state.page===1));
+      for(let i=Math.max(1,state.page-2); i<=Math.min(pages,state.page+2); i++){ items.push(btn(String(i),i,i===state.page)); }
+      items.push(btn('›',Math.min(pages,state.page+1),false,state.page===pages));
+      items.push(btn('»',pages,false,state.page===pages));
+      $pager.innerHTML = items.join('');
+      $pager.querySelectorAll('button[data-page]').forEach(b=> b.addEventListener('click', ()=>{ state.page=Number(b.dataset.page); renderPosts(); }));
+      bindRipples();
+    }
+
+    /*** =====================================
+     *  Posts CRUD
+     * ===================================== */
+    const postById = (id)=> load(KS.posts, []).find(p=>p.id===id);
+    function createPost(payload){ const me=currentUser(); const list=load(KS.posts, []); list.push({...payload, ownerId: me? me.id : null, id:uuid(), createdAt:Date.now()}); save(KS.posts,list); }
+    function updatePost(id, patch){ const list=load(KS.posts, []); const i=list.findIndex(p=>p.id===id); if(i<0) return; list[i]={...list[i],...patch}; save(KS.posts,list); }
+    function deletePost(id){ save(KS.posts, load(KS.posts, []).filter(p=>p.id!==id)); }
+
+    function setEditorMode({editable, showPreview}){
+      // 안전 가드(요소 존재 확인)
+      if(!$postMeta || !$editorWrap || !$postActions || !$postPreviewWrap){ return; }
+      // 제목/작성자 영역은 항상 표시(보기 모드에서도 확인 가능)
+      $postMeta.style.display = '';
+      // 에디터 영역: 편집 가능 + 미리보기 아님
+      $editorWrap.style.display = (editable && !showPreview) ? '' : 'none';
+      // 액션 버튼(저장/삭제): 편집 모드에서만
+      $postActions.style.display = editable ? '' : 'none';
+      // 툴바: 편집 모드에서만
+      const $toolbar = $('editorToolbar');
+      if($toolbar) $toolbar.style.display = editable ? 'flex' : 'none';
+      // 미리보기: showPreview가 true일 때만
+      $postPreviewWrap.style.display = showPreview ? '' : 'none';
+    }
+
+    function openPost(mode='new', id=null){
+      const me = currentUser();
+      if(!me){ alert('로그인이 필요합니다.'); return; }
+      if(me.status!=='APPROVED'){ alert('관리자 승인 후 이용할 수 있습니다.'); return; }
+
+      $dlgPostMode.textContent = mode==='new' ? '새 글' : (mode==='edit' ? '글 수정' : '글 보기');
+
+      let editable = true; let post=null;
+      if(mode==='new'){
+        $postId.value=''; $postTitle.value=''; $postAuthor.value = me.name || ''; $postContent.value='';
+        $postPreview.innerHTML = '';
+        setEditorMode({editable:true, showPreview:false});
+      } else {
+        post = postById(id); if(!post) return;
+        const canEdit = !!(me && (me.role==='ADMIN' || post.ownerId===me.id));
+        editable = (mode==='edit' && canEdit);
+        $postId.value=post.id; $postTitle.value=post.title; $postAuthor.value=post.author; $postContent.value=post.content;
+        if(mode==='view'){
+          $postPreview.innerHTML = renderMarkdown(post.content||'');
+          setEditorMode({editable:false, showPreview:true});
+        } else if(mode==='edit'){
+          $postPreview.innerHTML = '';
+          setEditorMode({editable:true, showPreview:false});
+        }
+      }
+
+      $btnDeletePost.hidden = !(mode==='edit');
+      [$postTitle, $postContent].forEach(el=>{ el.readOnly = !editable; el.disabled = !editable; });
+      $postAuthor.readOnly = true; $postAuthor.disabled = false; // 항상 읽기 전용
+      const submitBtn = $postForm.querySelector('button[type="submit"]');
+      if(submitBtn) submitBtn.style.display = editable ? '' : 'none';
+
+      if($dlgPost.showModal) $dlgPost.showModal(); else $dlgPost.show();
+      if(editable) $postTitle.focus();
+    }
+
+    /*** =====================================
+     *  Users / Auth
+     * ===================================== */
+    const listUsers = ()=> load(KS.users, []).sort((a,b)=> b.createdAt-a.createdAt);
+    const userByEmail = (email)=> listUsers().find(u=>u.email===email);
+    function createUser({email,name,password}){
+      const users = listUsers();
+      if(users.find(u=>u.email===email)) throw new Error('이미 사용 중인 이메일입니다.');
+      if(typeof password !== 'string') throw new Error('비밀번호가 올바르지 않습니다.');
+      // 8자 이상 + 영문/숫자 조합
+      const strongPw = /^(?=.*[0-9])(?=.*[A-Za-z]).{8,}$/.test(password);
+      if(!strongPw) throw new Error('비밀번호는 8자 이상, 영문/숫자 조합이어야 합니다.');
+      users.push({ id:uuid(), email, name, password, role:'USER', status:'PENDING', createdAt:Date.now() });
+      save(KS.users, users);
+    }
+    function approveUser(id){ const users=listUsers(); const i=users.findIndex(u=>u.id===id); if(i<0) return; users[i].status='APPROVED'; save(KS.users, users); }
+    function rejectUser(id){ const users=listUsers(); const i=users.findIndex(u=>u.id===id); if(i<0) return; users[i].status='REJECTED'; save(KS.users, users); }
+
+    function tryLogin(email,pw){
+      const u = userByEmail(email);
+      if(!u) return {ok:false, msg:'계정을 찾을 수 없습니다.'};
+      if(u.password!==pw) return {ok:false, msg:'비밀번호가 올바르지 않습니다.'};
+      if(u.status!=='APPROVED') return {ok:false, msg:'승인 대기 상태입니다. 관리자 승인 후 로그인 가능합니다.'};
+      setSession(u.id); return {ok:true, user:u};
+    }
+
+    function renderUsers(){
+      const me=currentUser(); if(!me || me.role!=='ADMIN'){ alert('관리자만 접근 가능합니다.'); return; }
+      const users=listUsers();
+      $tbodyUsers.innerHTML='';
+      users.forEach(u=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = '<td>'+esc(String(u.id).slice(0,8))+'</td>'+
+                       '<td>'+esc(u.email)+'</td>'+
+                       '<td>'+esc(u.name)+'</td>'+
+                       '<td>'+u.status+'</td>'+
+                       '<td>'+u.role+'</td>'+
+                       '<td class="muted">'+nowStr(u.createdAt)+'</td>'+
+                       '<td>'+
+                         '<button class="btn ok icon-only" data-act="approve" data-id="'+u.id+'" '+(u.status==='APPROVED'?'disabled':'')+' title="승인" aria-label="승인">'+svg('check')+'</button> '+
+                         '<button class="btn danger icon-only" data-act="reject" data-id="'+u.id+'" '+(u.status==='REJECTED'?'disabled':'')+' title="거절" aria-label="거절">'+svg('x')+'</button>'+
+                       '</td>';
+        $tbodyUsers.appendChild(tr);
+      });
+      $tbodyUsers.querySelectorAll('[data-act]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const id=b.getAttribute('data-id');
+          const act=b.getAttribute('data-act');
+          if(act==='approve') approveUser(id); else if(act==='reject') rejectUser(id);
+          renderUsers();
+        });
+      });
+      ensureAdminBackupBindings();
+    }
+
+    /*** =====================================
+     *  Manual Backup/Restore (Admin only)
+     * ===================================== */
+    function requireAdmin(){
+      const me = currentUser();
+      if(!me || me.role !== 'ADMIN'){
+        alert('관리자만 사용할 수 있습니다.');
+        throw new Error('ADMIN_ONLY');
+      }
+    }
+
+    function downloadBackupNow(){
+      try{
+        requireAdmin();
+        const payload = { users: load(KS.users, []), posts: load(KS.posts, []), ts: Date.now() };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'board-backup-' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.json';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        alert('백업 파일을 다운로드했습니다.');
+      }catch(e){ if(e && e.message==='ADMIN_ONLY') return; alert('백업 다운로드 중 오류가 발생했습니다.'); console.error(e); }
+    }
+
+    async function saveBackupWithPicker(){
+      try{
+        requireAdmin();
+        const payload = { users: load(KS.users, []), posts: load(KS.posts, []), ts: Date.now() };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        if(window.showSaveFilePicker){
+          const handle = await showSaveFilePicker({ suggestedName: 'board-backup.json', types:[{ description:'JSON', accept:{'application/json':['.json']} }] });
+          const w = await handle.createWritable(); await w.write(blob); await w.close();
+          alert('파일로 저장이 완료되었습니다.');
+        } else {
+          downloadBackupNow();
+        }
+      }catch(e){ if(e && e.message==='ADMIN_ONLY') return; alert('파일 저장 중 오류가 발생했습니다.'); console.error(e); }
+    }
+
+    async function restoreFromFile(){
+      function applyJsonSync(text){
+        const data = JSON.parse(text);
+        if(!(data && Array.isArray(data.users) && Array.isArray(data.posts))) throw new Error('형식 불일치');
+        save(KS.users, data.users); save(KS.posts, data.posts);
+        renderNavbar(); renderPosts(); updateBackupStatus();
+        alert('복원이 완료되었습니다.');
+      }
+      try{
+        requireAdmin();
+        if(window.showOpenFilePicker){
+          const [handle] = await showOpenFilePicker({ types:[{ description:'JSON', accept:{'application/json':['.json']} }] });
+          const file = await handle.getFile(); const text = await file.text();
+          applyJsonSync(text);
+        } else {
+          const input = document.createElement('input'); input.type='file'; input.accept='application/json'; input.style.display='none';
+          input.addEventListener('change', async ()=>{ const f=input.files && input.files[0]; if(!f) return; const text = await f.text(); applyJsonSync(text); input.remove(); });
+          document.body.appendChild(input); input.click();
+        }
+      }catch(e){ if(e && e.message==='ADMIN_ONLY') return; alert('가져오기 중 오류가 발생했습니다.'); console.error(e); }
+    }
+
+    function ensureAdminBackupBindings(){
+      const pairs = [
+        [$btnBackupDownload(), downloadBackupNow],
+        [$btnBackupSavePicker(), saveBackupWithPicker],
+        [$btnBackupImport(), restoreFromFile],
+        [$btnBackupLinkFolder(), connectBackupFolder]
+      ];
+      pairs.forEach(([el, fn])=>{
+        if(!el) return;
+        if(el.dataset.bound==='1') return;
+        el.addEventListener('click', fn);
+        el.dataset.bound='1';
+      });
+    }
+
+    /*** =====================================
+     *  Auto Backup (OPFS + 선택 폴더)
+     * ===================================== */
+    async function runAutoBackup(){
+      try{
+        const payload = { users: load(KS.users, []), posts: load(KS.posts, []), ts: Date.now() };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+        // OPFS write
+        await opfsWrite('backups/board-backup.json', blob);
+        save(KS.lastBackup, Date.now());
+        updateBackupStatus();
+        // External folder mirror
+        if(_backupDirHandle){
+          try{
+            let perm = _backupDirHandle.queryPermission ? await _backupDirHandle.queryPermission({mode:'readwrite'}) : 'prompt';
+            if(perm !== 'granted' && _backupDirHandle.requestPermission){ perm = await _backupDirHandle.requestPermission({mode:'readwrite'}); }
+            if(perm === 'granted'){
+              const name = 'board-backup-' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.json';
+              const fh = await _backupDirHandle.getFileHandle(name, {create:true});
+              const w2 = await fh.createWritable(); await w2.write(blob); await w2.close();
+            }
+          }catch(e){ console.warn('External folder backup failed:', e); }
+        }
+      }catch(err){
+        console.warn('Auto backup failed:', err);
+        if(!(navigator.storage && navigator.storage.getDirectory)){
+          const $s = document.getElementById('backupStatus'); if($s) $s.style.display='none';
+          if(_autoBackupTimer) { clearInterval(_autoBackupTimer); _autoBackupTimer = null; }
+        }
+      }
+    }
+
+    function updateBackupStatus(){
+      const $s = document.getElementById('backupStatus'); const $t = document.getElementById('backupText');
+      if(!$s||!$t) return;
+      const ts = load(KS.lastBackup, null);
+      $s.style.display = 'inline-flex';
+      $t.textContent = '자동 백업: ' + fmtAgo(ts);
+    }
+
+    async function connectBackupFolder(){
+      requireAdmin();
+      if(!window.showDirectoryPicker){ alert('이 브라우저는 폴더 연결을 지원하지 않습니다. (크롬/엣지 최신 권장)'); return; }
+      try{
+        const handle = await showDirectoryPicker({ id:'board-backups', mode:'readwrite' });
+        let perm = handle.queryPermission ? await handle.queryPermission({mode:'readwrite'}) : 'prompt';
+        if(perm !== 'granted' && handle.requestPermission){ perm = await handle.requestPermission({mode:'readwrite'}); }
+        if(perm !== 'granted'){ alert('폴더에 쓰기 권한이 필요합니다.'); return; }
+        _backupDirHandle = handle;
+        try{ await FSDB.setDirHandle(handle); }catch(e){ console.warn('Could not persist handle to IDB', e); }
+        updateLinkedFolderStatus(true);
+        alert('백업 폴더가 연결되었습니다.');
+      }catch(e){ console.error(e); alert('폴더 연결 중 오류가 발생했습니다.'); }
+    }
+
+    function updateLinkedFolderStatus(connected){
+      const hint = document.getElementById('linkedFolderStatus');
+      const btn = document.getElementById('btnBackupLinkFolder');
+      if(hint) hint.style.display = connected ? 'inline' : 'none';
+      if(btn){ const label = btn.querySelector('.btn-label'); if(label) label.textContent = connected ? '폴더 변경' : '백업 폴더 연결'; }
+    }
+
+    async function tryRestoreBackupFolder(){
+      try{
+        if(!window.indexedDB) return;
+        const handle = await FSDB.getDirHandle();
+        if(handle){
+          let perm = handle.queryPermission ? await handle.queryPermission({mode:'readwrite'}) : 'prompt';
+          if(perm !== 'granted' && handle.requestPermission){ perm = await handle.requestPermission({mode:'readwrite'}); }
+          if(perm === 'granted'){ _backupDirHandle = handle; updateLinkedFolderStatus(true); }
+        }
+      }catch(e){ console.warn('restore folder handle failed', e); }
+    }
+
+    /*** =====================================
+     *  Editor events (image + preview)
+     * ===================================== */
+    function refreshPreview(){
+      $postPreview.innerHTML = renderMarkdown($postContent.value||'');
+    }
+
+    if($btnTogglePreview){
+      $btnTogglePreview.addEventListener('click', ()=>{
+        const showing = $postPreviewWrap && $postPreviewWrap.style.display !== 'none';
+        if(showing){
+          // turn off preview, show editor
+          if($postPreviewWrap) $postPreviewWrap.style.display='none';
+          if($editorWrap) $editorWrap.style.display='';
+          $btnTogglePreview.textContent='미리보기';
+        }else{
+          refreshPreview();
+          if($postPreviewWrap) $postPreviewWrap.style.display='';
+          if($editorWrap) $editorWrap.style.display='none';
+          $btnTogglePreview.textContent='편집하기';
+        }
+      });
+    }
+
+    if($btnInsertImage && $imgFileInput){
+      $btnInsertImage.addEventListener('click', ()=> $imgFileInput.click());
+      $imgFileInput.addEventListener('change', async (e)=>{
+        const files = Array.from(e.target.files||[]);
+        await handleFilesToMarkdown(files, $postContent);
+        if($postPreviewWrap.style.display!=='none') refreshPreview();
+        $imgFileInput.value='';
+      });
+    }
+
+    // Paste image
+    if($postContent){
+      $postContent.addEventListener('paste', async (e)=>{
+        const items = Array.from(e.clipboardData?.items||[]);
+        const files = items.filter(it=> it.kind==='file').map(it=> it.getAsFile()).filter(Boolean);
+        if(files.length){ e.preventDefault(); await handleFilesToMarkdown(files, $postContent); if($postPreviewWrap && $postPreviewWrap.style.display!=='none') refreshPreview(); }
+      });
+      // Drag & drop image
+      $postContent.addEventListener('dragover', e=>{ e.preventDefault(); });
+      $postContent.addEventListener('drop', async (e)=>{
+        e.preventDefault(); const files = Array.from(e.dataTransfer?.files||[]); if(files.length){ await handleFilesToMarkdown(files, $postContent); if($postPreviewWrap && $postPreviewWrap.style.display!=='none') refreshPreview(); }
+      });
+    }
+
+    /*** =====================================
+     *  Motion
+     * ===================================== */
+    function bindRipples(){
+      const targets = document.querySelectorAll('.btn, .page-btn, .icon-btn');
+      targets.forEach(el=>{
+        if(el.dataset.rippleBound==='1') return; el.dataset.rippleBound='1';
+        el.addEventListener('click', (e)=>{
+          const rect=el.getBoundingClientRect();
+          const cx = rect.width/2, cy = rect.height/2;
+          const x = (e && e.clientX) ? (e.clientX-rect.left) : cx;
+          const y = (e && e.clientY) ? (e.clientY-rect.top) : cy;
+          const span=document.createElement('span'); span.className='ripple'; span.style.left=x+'px'; span.style.top=y+'px';
+          el.appendChild(span); span.addEventListener('animationend', ()=> span.remove());
+        });
+      });
+    }
+    function entrance(){
+      document.querySelectorAll('header, .panel').forEach((el,i)=>{
+        el.classList.add('reveal'); requestAnimationFrame(()=> setTimeout(()=> el.classList.add('is-visible'), 60+i*90));
+      });
+    }
+
+    /*** =====================================
+     *  Events
+     * ===================================== */
+    if($btnLogin) $btnLogin.addEventListener('click', ()=>{ $loginMsg.textContent=''; $loginForm.reset(); if($dlgLogin.showModal) $dlgLogin.showModal(); else $dlgLogin.show(); $loginEmail.focus(); });
+    if($btnSignup) $btnSignup.addEventListener('click', ()=>{ $signupMsg.textContent=''; $signupForm.reset(); if($dlgSignup.showModal) $dlgSignup.showModal(); else $dlgSignup.show(); $suEmail.focus(); });
+    if($btnLogout) $btnLogout.addEventListener('click', ()=>{ setSession(null); renderNavbar(); renderPosts(); alert('로그아웃 되었습니다.'); });
+    if($btnAdmin) $btnAdmin.addEventListener('click', ()=>{ renderUsers(); if($dlgAdmin.showModal) $dlgAdmin.showModal(); else $dlgAdmin.show(); });
+
+    if($closeLogin) $closeLogin.addEventListener('click', ()=> $dlgLogin.close());
+    if($closeSignup) $closeSignup.addEventListener('click', ()=> $dlgSignup.close());
+    if($closeAdmin) $closeAdmin.addEventListener('click', ()=> $dlgAdmin.close());
+
+    if($loginForm) $loginForm.addEventListener('submit', (e)=>{
+      e.preventDefault(); const {ok,msg} = tryLogin($loginEmail.value.trim(), $loginPw.value.trim());
+      if(!ok){ $loginMsg.textContent=msg; return; }
+      $dlgLogin.close(); renderNavbar(); renderPosts();
+    });
+
+    if($signupForm) $signupForm.addEventListener('submit', (e)=>{
+      e.preventDefault(); const email=$suEmail.value.trim(); const name=$suName.value.trim(); const pw=$suPw.value; const pw2=$suPw2.value;
+      if(pw!==pw2){ $signupMsg.textContent='비밀번호가 일치하지 않습니다.'; return; }
+      try{ createUser({email,name,password:pw}); $signupMsg.textContent='가입 신청 완료! 관리자 승인을 기다려주세요.'; }
+      catch(err){ $signupMsg.textContent=String(err.message||err); }
+    });
+
+    if($btnNewPost) $btnNewPost.addEventListener('click', ()=> openPost('new'));
+    if($closePost) $closePost.addEventListener('click', ()=> $dlgPost.close());
+
+    if($postForm) $postForm.addEventListener('submit', (e)=>{
+      e.preventDefault(); const me=currentUser(); if(!me){ alert('로그인이 필요합니다.'); return; } if(me.status!=='APPROVED'){ alert('관리자 승인 후 이용할 수 있습니다.'); return; }
+      const id = $postId.value;
+      let authorFixed = '';
+      if(id){ const p = postById(id); const meNow = currentUser(); authorFixed = (p && p.author) ? p.author : (meNow ? meNow.name : ''); }
+      else { const meNow = currentUser(); authorFixed = meNow ? meNow.name : ''; }
+      const payload = { title: $postTitle.value.trim(), author: authorFixed, content: $postContent.value.trim() };
+      if(!payload.title||!payload.author||!payload.content){ alert('모든 필드를 입력하세요.'); return; }
+      if(id){ const p=postById(id); const canEdit=!!(me && (me.role==='ADMIN'||p.ownerId===me.id)); if(!canEdit){ alert('이 글을 수정할 권한이 없습니다.'); return; } updatePost(id,payload); }
+      else { createPost(payload); }
+      $dlgPost.close(); renderPosts();
+    });
+
+    if($btnDeletePost) $btnDeletePost.addEventListener('click', ()=>{
+      const id=$postId.value; if(!id) return; const me=currentUser(); const p=postById(id); const canEdit=!!(me && (me.role==='ADMIN'||p.ownerId===me.id));
+      if(!canEdit){ alert('이 글을 삭제할 권한이 없습니다.'); return; }
+      if(confirm('정말 삭제하시겠습니까?')){ deletePost(id); $dlgPost.close(); renderPosts(); }
+    });
+
+    if($q) $q.addEventListener('input', ()=>{ state.q=$q.value; state.page=1; renderPosts(); });
+    if($resetSearch) $resetSearch.addEventListener('click', ()=>{ $q.value=''; state.q=''; state.page=1; renderPosts(); });
+
+    /*** =====================================
+     *  Init
+     * ===================================== */
+    initTheme();
+    renderNavbar();
+    renderPosts();
+    entrance();
+    bindRipples();
+    updateBackupStatus();
+    tryRestoreBackupFolder();
+
+    if(navigator.storage && navigator.storage.getDirectory){
+      if(navigator.storage && navigator.storage.persist){ try{ navigator.storage.persist(); }catch{ /* noop */ } }
+      _autoBackupTimer = setInterval(runAutoBackup, AUTO_BACKUP_MS);
+      // 초기 자동 백업은 즉시 실행하지 않고, 주기 이후에 실행
+      setTimeout(runAutoBackup, AUTO_BACKUP_MS);
+    }
+  })();
+</script>
 </body>
 </html>
-
-
