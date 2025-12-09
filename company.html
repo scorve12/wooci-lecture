@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회사소개 - SUNKIST</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <!-- Heroicons for menu icon -->
+    <script src="https://unpkg.com/heroicons@2.1.3/24/outline/index.js"></script>
+    <style>
+        /* 기본 폰트 설정 */
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="index.html" class="text-2xl font-bold tracking-wider text-gray-900" style="font-family: 'Montserrat', sans-serif; letter-spacing: 0.1em;">
+                        SUNKIST
+                    </a>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="company.html" class="text-sm font-medium text-gray-900 hover:text-gray-900">회사소개</a>
+                    <a href="purchase.html" class="text-sm font-medium text-gray-600 hover:text-gray-900">강의신청</a>
+                    <div class="hidden md:flex items-center space-x-4">
+                        <a href="consultation.html" class="text-sm font-medium bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700">상담신청</a>
+                    </div>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                        <span class="sr-only">Open main menu</span>
+                        <!-- Hamburger Icon -->
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu, show/hide based on menu state. -->
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="company.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">회사소개</a>
+                <a href="purchase.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">강의신청</a>
+                <a href="consultation.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">상담신청</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto mt-10 mb-20 px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Page Title -->
+            <h1 class="text-4xl md:text-5xl font-bold text-center mb-4">회사소개</h1>
+            <p class="text-center text-gray-600 mb-16">SUNKIST와 함께하는 성공적인 판매 전략</p>
+
+            <!-- Company Introduction -->
+            <section class="mb-16">
+                <h2 class="text-2xl md:text-3xl font-bold mb-6">유통회사 SUNKIST</h2>
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-4">
+                    <p>
+                        SUNKIST는 구매대행 및 온라인 판매 전문 유통회사로, 연 1억 이상의 매출을 달성한 검증된 노하우를 바탕으로
+                        셀러들의 성공적인 비즈니스를 지원합니다.
+                    </p>
+                    <p>
+                        우리는 실제 현장에서 쌓은 경험과 데이터를 기반으로 한 실전 강의를 제공하며,
+                        수강생들이 마진율을 극대화하고 지속 가능한 수익 모델을 구축할 수 있도록 돕고 있습니다.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Vision & Mission -->
+            <section class="mb-16 bg-gray-50 p-8 rounded-lg">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-indigo-600">비전 (Vision)</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            온라인 유통 시장에서 가장 신뢰받는 교육 파트너가 되어,
+                            모든 셀러가 성공적인 비즈니스를 운영할 수 있도록 지원합니다.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-indigo-600">미션 (Mission)</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            실전 경험을 바탕으로 한 체계적인 교육 프로그램을 제공하여,
+                            수강생들이 실질적인 매출 성과를 달성할 수 있도록 합니다.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Core Values -->
+            <section class="mb-16">
+                <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center">핵심 가치</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2">검증된 노하우</h3>
+                        <p class="text-gray-600">실제 매출 달성 경험을 바탕으로 한 실전 전략</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2">밀착 케어</h3>
+                        <p class="text-gray-600">수강생 한 명 한 명의 성공을 위한 개별 컨설팅</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2">실전 중심</h3>
+                        <p class="text-gray-600">이론이 아닌 즉시 적용 가능한 실무 교육</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Company Info -->
+            <section class="border-t pt-12">
+                <h2 class="text-2xl md:text-3xl font-bold mb-6">회사 정보</h2>
+                <div class="space-y-3 text-gray-700">
+                    <p><span class="font-semibold text-gray-900">회사명:</span> 유통회사 SUNKIST</p>
+                    <p><span class="font-semibold text-gray-900">대표자:</span> 전성환</p>
+                    <p><span class="font-semibold text-gray-900">사업자등록번호:</span> 816-09-02861</p>
+                    <p><span class="font-semibold text-gray-900">통신판매업번호:</span> 제2023-광주광산-0149호</p>
+                    <p><span class="font-semibold text-gray-900">주소:</span> 광주광역시 광산구 수등로76번길 74, 109동 101호</p>
+                    <p><span class="font-semibold text-gray-900">이메일:</span> nwj1224@naver.com</p>
+                    <p><span class="font-semibold text-gray-900">전화:</span> 010-6490-7067</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto py-12 px-4">
+            <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                <div class="mb-8 md:mb-0">
+                    <div class="text-2xl font-bold tracking-wider text-white mx-auto md:mx-0" style="font-family: 'Montserrat', sans-serif; letter-spacing: 0.1em;">
+                        SUNKIST
+                    </div>
+                    <div class="mt-6 flex justify-center md:justify-start space-x-6">
+                        <a href="#" class="text-sm text-gray-400 hover:text-white">서비스이용약관</a>
+                        <a href="#" class="text-sm text-gray-400 hover:text-white">개인정보처리방침</a>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-400">
+                    <p>유통회사 SUNKIST | 사업자등록번호 : 816-09-02861 | 대표자 : 전성환</p>
+                    <p>통신판매업번호 : 제2023-광주광산-0149호</p>
+                    <p>광주광역시 광산구 수등로76번길 74, 109동 101호 | 이메일 : nwj1224@naver.com</p>
+                    <p>Tel. 010-6490-7067 </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Mobile Menu Toggle ---
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
